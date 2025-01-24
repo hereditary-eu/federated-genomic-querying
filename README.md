@@ -5,7 +5,7 @@ This project demonstrates a simple **PHP + Bootstrap** web application for issui
 1. **Beacon Sequence Query**  
 2. **Beacon Range Query**  
 3. **Beacon Bracket Query**  
-4. **Beacon VT Query** (find genomic variants by a fixed `infoKey` = `"VT"` and a user-provided `infoValue`, e.g. `"INDEL"`)
+4. **Beacon Aminoacid Change Query** (find genomic variants by a fixed `infoKey` = `"VT"` and a user-provided `infoValue`, e.g. `"INDEL"`)
 
 After retrieving the main query results, the app automatically (after a short delay) fetches **metadata** for each row (except for the VT query, which skips metadata).
 
