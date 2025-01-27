@@ -292,28 +292,33 @@ function displayMainResults(rows) {
   // Build table
   html += `<table class="table table-bordered table-sm"><thead><tr>`;
   const headers = Object.keys(rows[0]);
-  html += `<th>FROM</th>`;
   headers.forEach(h => {
     html += `<th>${escapeHtml(h)}</th>`;
   });
   html += `</tr></thead><tbody>`;
 
   rows.forEach((r, i) => {
-    html += `<tr> <td>`;
-    if (r.chrom == 1) {
-      html += `<img src="1000genomes.png" style="width:3.5em;">`;
-    }
-    else {
-      html += `<img src="CINECA_logo.png" style="width:3.5em;">`;
-    } //EH INZOMMA QUA
-    html += `</td>`;
+    html += `<tr>`;
     headers.forEach(h => {
       var string = escapeHtml(r[h]);
-      if (string.length > 23) {
-        string = string.substring(0, 20);
-        string = string.concat("...");
+      if (h == "dataset" || h == 0) {
+        if (r[h] == "cineca") {
+          string = `<img src="CINECA_logo.png" style="width:3.5em;">`;
+        }
+        else {
+          string = `<img src="1000genomes.png" style="width:3.5em;">`;
+        } 
+        html += `<td>`;
+        html += string;
+        html += `</td>`;
       }
-      html += `<td alt="${escapeHtml(r[h])}">${string}</td>`;
+      else {
+        if (string.length > 23) {
+          string = string.substring(0, 20);
+          string = string.concat("...");
+        }
+        html += `<td alt="${escapeHtml(r[h])}">${string}</td>`;
+      }
     });
     html += `</tr>`;
   });

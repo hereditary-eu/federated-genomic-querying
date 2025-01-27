@@ -82,12 +82,13 @@ function buildSequenceQuery($pos, $ref, $alt) {
 PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?chrom ?pos ?ref ?alt
+SELECT ?dataset ?chrom ?pos ?ref ?alt
 WHERE {
   ?variation a :GenomicVariation ;
              :referenceBases ?ref ;
              :alternateBases ?alt ;
-             :location ?seqLoc .
+             :location ?seqLoc ;
+             :fromDataset ?dataset .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
   ?seqInt :sequenceIntervalStart ?pos .
@@ -111,11 +112,12 @@ function buildRangeQuery($chrom, $start, $end) {
 PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?chrom ?pos ?ref ?alt
+SELECT ?dataset ?chrom ?pos ?ref ?alt
 WHERE {
   ?variation a :GenomicVariation ;
              :referenceBases ?ref ;
              :alternateBases ?alt ;
+             :fromDataset ?dataset ;
              :location ?seqLoc .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
@@ -144,11 +146,12 @@ PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?chrom ?pos ?ref ?alt
+SELECT ?dataset ?chrom ?pos ?ref ?alt
 WHERE {
   ?variation a :GenomicVariation ;
              :referenceBases ?ref ;
              :alternateBases ?alt ;
+             :fromDataset ?dataset ;
              :location ?seqLoc .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
@@ -175,7 +178,7 @@ function buildVtQuery($infoValue) {
 PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?chrom ?ref ?alt
+SELECT ?dataset ?chrom ?ref ?alt
 WHERE {
   {
     SELECT ?infoKey ?infoValue ?vInfoId
@@ -185,7 +188,7 @@ WHERE {
              :hasInfoValue ?infoValue ;
              :hasVariantId ?vInfoId .
       FILTER (
-        ?infoKey = "VT"^^rdf:PlainLiteral &&
+        (?infoKey = "VT"^^rdf:PlainLiteral || ?infoKey = "SVTYPE"^^rdf:PlainLiteral) &&
         ?infoValue = "$infoValue"^^rdf:PlainLiteral
       )
     }
@@ -195,6 +198,7 @@ WHERE {
              :referenceBases ?ref ;
              :alternateBases ?alt ;
              :variantInternalID ?variantId ;
+             :fromDataset ?dataset ;
              :location ?seqLoc .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
@@ -212,7 +216,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 SELECT ?infoKey ?infoValue
 WHERE {
   {
-    SELECT ?chrom ?pos ?ref ?alt ?variantId
+    SELECT ?dataset ?chrom ?pos ?ref ?alt ?variantId
     WHERE {
       ?variation a :GenomicVariation ;
                  :referenceBases ?ref ;
@@ -296,6 +300,7 @@ try {
     // We know the new query has ?chrom, ?ref, ?alt. Others have ?chrom, ?pos, ?ref, ?alt, etc.
     foreach($bindings as $b) {
       $row = [];
+      if(isset($b['dataset'])) $row['dataset'] = $b['dataset']['value'];
       if(isset($b['chrom'])) $row['chrom'] = $b['chrom']['value'];
       if(isset($b['pos']))   $row['pos']   = $b['pos']['value'];
       if(isset($b['ref']))   $row['ref']   = $b['ref']['value'];
@@ -324,6 +329,7 @@ try {
     $results = [];
     foreach($bindings as $b) {
       $results[] = [
+        "dataset"   => $b['dataset']['value']   ?? '',
         "infoKey"   => $b['infoKey']['value']   ?? '',
         "infoValue" => $b['infoValue']['value'] ?? ''
       ];
