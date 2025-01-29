@@ -1,0 +1,58 @@
+[PrefixDeclaration]
+:		https://w3id.org/hereditary/ontology/schema/
+bto:		https://w3id.org/brainteaser/ontology/schema/
+owl:		http://www.w3.org/2002/07/owl#
+rdf:		http://www.w3.org/1999/02/22-rdf-syntax-ns#
+xml:		http://www.w3.org/XML/1998/namespace
+xsd:		http://www.w3.org/2001/XMLSchema#
+obda:		https://w3id.org/obda/vocabulary#
+rdfs:		http://www.w3.org/2000/01/rdf-schema#
+
+[MappingDeclaration] @collection [[
+mappingId	MAPID-9c77a5edca8e4d7f823e4c418e6605df
+target		:chr{chrom}{pos}{ref}{alt} a :GenomicVariation ; :variantInternalID {variant_id}^^rdf:PlainLiteral ; :genomicHGVSID "{chrom}:g.{pos}>{alt}"^^rdf:PlainLiteral ; :fromDataset {dataset}^^rdf:PlainLiteral . 
+source		SELECT chrom, pos, "ref", alt, variant_id, dataset FROM geno.variants;
+
+mappingId	MAPID-868c2fe1dffc4fa2b01888540fc4639b
+target		:chr{chrom}{pos}{ref}{alt} :variantAlternativeID :chr{chrom}{pos}{ref}{alt}AlternativeID . :chr{chrom}{pos}{ref}{alt}AlternativeID :valueID {id}^^rdf:PlainLiteral . 
+source		SELECT chrom, pos, "ref", alt, id FROM geno.variants;
+
+mappingId	MAPID-53216787f7c54ef796a339d890020640
+target		:chr{chrom}{pos}{ref}{alt} :variantAlternativeID :chr{chrom}{pos}{ref}{alt}AlternativeID . :chr{chrom}{pos}{ref}{alt}AlternativeID :alternativeIDReference {info_vt}^^rdf:PlainLiteral . 
+source		SELECT chrom, pos, "ref", alt, 'dbSNP' AS info_vt FROM geno.variants WHERE id LIKE 'rs%'
+			UNION
+			SELECT chrom, pos, "ref", alt, '' AS info_vt FROM geno.variants WHERE id NOT LIKE 'rs%'
+
+mappingId	MAPID-7087598fc27e42d49b4e75718f6414be
+target		:chr{chrom}{pos}{ref}{alt} :referenceBases {ref}^^rdf:PlainLiteral ; :alternateBases {alt}^^rdf:PlainLiteral . 
+source		SELECT chrom, pos, "ref", alt FROM geno.variants;
+
+mappingId	MAPID-b3d0477ef16644bfb5cfacbed3c0e24d
+target		:chr{chrom}{pos}{ref}{alt}Location a :Location ; :referenceSequence "HGVSid:{chrom}:g.{pos}{ref}>{alt}"^^rdf:PlainLiteral ; :locationChr {chrom}^^rdf:PlainLiteral . :chr{chrom}{pos}{ref}{alt} :location :chr{chrom}{pos}{ref}{alt}Location . 
+source		SELECT chrom, pos, "ref", alt FROM geno.variants;
+
+mappingId	MAPID-6689d7e49cc24c6db8eab53a1b5f3e8f
+target		:chr{chrom}{pos}{ref}{alt}SequenceInterval a :SequenceInterval ; :sequenceIntervalStart {posStart}^^rdf:PlainLiteral ; :sequenceIntervalEnd {posEnd}^^rdf:PlainLiteral . :chr{chrom}{pos}{ref}{alt}Location :sequenceInterval :chr{chrom}{pos}{ref}{alt}SequenceInterval . 
+source		SELECT chrom, pos, "ref", alt, pos AS posEnd, (pos-1) AS posStart FROM geno.variants;
+
+mappingId	MAPID-5b1d08754b40429b9356b7060ca7f384
+target		:chr{chrom}{pos}{ref}{alt}_variantQuality a :VariantQuality ; :variantQual {qual}^^xsd:float ; :variantFilter {filter}^^rdf:PlainLiteral . :chr{chrom}{pos}{ref}{alt} :variantQuality :chr{chrom}{pos}{ref}{alt}_variantQuality . 
+source		SELECT chrom, pos, "ref", alt, qual, "filter" FROM geno.variants;
+
+mappingId	MAPID-1769f8db7e1445a3a496206f0ade5cc1
+target		:chr{chrom}{pos}{ref}{alt}{sample_name} a :CaseLevelVariant ; :biosample :{sample_name} . :{sample_name} a :Biosample . :chr{chrom}{pos}{ref}{alt} :caseLevelData :chr{chrom}{pos}{ref}{alt}{sample_name} . 
+source		SELECT chrom, pos, "ref", alt, sample_name FROM geno.variants INNER JOIN geno.zygosity ON geno.zygosity.variant_id = geno.variants.variant_id INNER JOIN geno.samples ON geno.samples.sample_id = geno.zygosity.sample_id;
+
+mappingId	MAPID-8eb557689a4748ee9b32b14187418aff
+target		:chr{chrom}{pos}{ref}{alt}{sample_name} :zygosity :Homozygous . 
+source		SELECT chrom, pos, "ref", alt, sample_name FROM geno.variants INNER JOIN geno.zygosity ON geno.zygosity.variant_id = geno.variants.variant_id INNER JOIN geno.samples ON geno.samples.sample_id = geno.zygosity.sample_id WHERE gt = '0|0' OR gt = '1|1';
+
+mappingId	MAPID-4196903ddbc94e1c94d14e6e71ac7bc7
+target		:chr{chrom}{pos}{ref}{alt}{sample_name} :zygosity :Heterozygous . 
+source		SELECT chrom, pos, "ref", alt, sample_name FROM geno.variants INNER JOIN geno.zygosity ON geno.zygosity.variant_id = geno.variants.variant_id INNER JOIN geno.samples ON geno.samples.sample_id = geno.zygosity.sample_id WHERE gt = '1|0' OR gt = '0|1';
+
+mappingId	MAPID-65592e9e8d8c4023892e9ef782ba72dd
+target		:info{variant_id}{info_key} a :Variant_Info ; :hasInfoKey {info_key}^^rdf:PlainLiteral ; :hasInfoValue {info_value}^^rdf:PlainLiteral ; :hasVariantId {variant_id}^^rdf:PlainLiteral . 
+source		SELECT info_key, info_value, geno.variant_info.variant_id FROM geno.variant_info;
+]]
+
