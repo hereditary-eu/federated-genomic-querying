@@ -28,6 +28,7 @@ WHERE {
     ?ref = "PARAM_REF"^^rdf:PlainLiteral &&
     ?alt = "PARAM_ALT"^^rdf:PlainLiteral
   )
+}
 
 
 ################################################################################
