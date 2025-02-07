@@ -6,27 +6,28 @@
 PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?chrom ?pos ?ref ?alt
+SELECT ?dataset ?chrom ?pos ?ref ?alt
 WHERE {
   ?variation a :GenomicVariation ;
              :referenceBases ?ref ;
              :alternateBases ?alt ;
-             :location ?seqLoc .
+             :location ?seqLoc ;
+             :fromDataset ?dataset .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
   ?seqInt :sequenceIntervalStart ?pos .
 
   OPTIONAL {
     ?seqLoc :referenceSequence ?refName .
-    FILTER (?refName = "GRCh38"^^rdf:PlainLiteral)
+    FILTER(?refName = "GRCh38"^^rdf:PlainLiteral)
   }
 
-  FILTER (
+  FILTER(
+    ?pos = "PARAM_REF_NAME"^^rdf:PlainLiteral &&
     ?pos = "PARAM_POS"^^rdf:PlainLiteral &&
     ?ref = "PARAM_REF"^^rdf:PlainLiteral &&
     ?alt = "PARAM_ALT"^^rdf:PlainLiteral
   )
-}
 
 
 ################################################################################
@@ -36,27 +37,28 @@ WHERE {
 PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?chrom ?pos ?ref ?alt
+SELECT ?dataset ?chrom ?pos ?ref ?alt
 WHERE {
   ?variation a :GenomicVariation ;
              :referenceBases ?ref ;
              :alternateBases ?alt ;
+             :fromDataset ?dataset ;
              :location ?seqLoc .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
   ?seqInt :sequenceIntervalStart ?pos .
-  ?seqInt :sequenceIntervalEnd ?theEnd .
+  ?seqInt :sequenceIntervalEnd ?end .
 
   OPTIONAL {
     ?seqLoc :referenceSequence ?refName .
-    FILTER (?refName = "GRCh38"^^rdf:PlainLiteral)
+    FILTER(?refName = "GRCh38"^^rdf:PlainLiteral)
   }
 
-  FILTER (
-    ?chrom = "PARAM_CHROM"^^rdf:PlainLiteral &&
+  FILTER(
+    ?chrom = "PARAM_REF_NAME"^^rdf:PlainLiteral &&
     (
-      ?pos = "PARAM_START"^^rdf:PlainLiteral ||
-      ?theEnd = "PARAM_END"^^rdf:PlainLiteral
+      ?pos = "PARAM_POS_START"^^rdf:PlainLiteral ||
+      ?end = "PARAM_POS_END"^^rdf:PlainLiteral
     )
   )
 }
@@ -71,11 +73,12 @@ PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?chrom ?pos ?ref ?alt
+SELECT ?dataset ?chrom ?pos ?ref ?alt
 WHERE {
   ?variation a :GenomicVariation ;
              :referenceBases ?ref ;
              :alternateBases ?alt ;
+             :fromDataset ?dataset ;
              :location ?seqLoc .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
@@ -99,7 +102,7 @@ WHERE {
 PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?chrom ?ref ?alt
+SELECT ?dataset ?chrom ?ref ?alt
 WHERE {
   {
     SELECT ?infoKey ?infoValue ?vInfoId
@@ -109,7 +112,7 @@ WHERE {
              :hasInfoValue ?infoValue ;
              :hasVariantId ?vInfoId .
       FILTER (
-        ?infoKey = "VT"^^rdf:PlainLiteral &&
+        (?infoKey = "VT"^^rdf:PlainLiteral || ?infoKey = "SVTYPE"^^rdf:PlainLiteral) &&
         ?infoValue = "PARAM_INFO_VALUE"^^rdf:PlainLiteral
       )
     }
@@ -119,9 +122,10 @@ WHERE {
              :referenceBases ?ref ;
              :alternateBases ?alt ;
              :variantInternalID ?variantId ;
+             :fromDataset ?dataset ;
              :location ?seqLoc .
   ?seqLoc :sequenceInterval ?seqInt ;
           :locationChr ?chrom .
 
-  FILTER (?variantId = ?vInfoId)
+  FILTER(?variantId = ?vInfoId)
 }

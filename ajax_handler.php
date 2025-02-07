@@ -158,7 +158,7 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
 /**************************************************************
  * SPARQL Builders
  **************************************************************/
-function buildSequenceQuery($pos, $ref, $alt) {
+function buildSequenceQuery($chrom, $pos, $ref, $alt) {
   return <<<SPARQL
 PREFIX : <https://w3id.org/hereditary/ontology/schema/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -180,6 +180,7 @@ WHERE {
   }
 
   FILTER(
+    ?pos = "$chrom"^^rdf:PlainLiteral &&
     ?pos = "$pos"^^rdf:PlainLiteral &&
     ?ref = "$ref"^^rdf:PlainLiteral &&
     ?alt = "$alt"^^rdf:PlainLiteral
@@ -346,7 +347,7 @@ try {
         $alt = $data['alt'] ?? "C";
 
         // 1) Run local SPARQL
-        /*$sparql = buildSequenceQuery($pos, $ref, $alt);
+        /*$sparql = buildSequenceQuery($chrom, $pos, $ref, $alt);
         $localJson = executeSparqlQuery($graphdbEndpoint, $sparql);
         $localBindings = $localJson['results']['bindings'] ?? [];
         $localResults = [];
