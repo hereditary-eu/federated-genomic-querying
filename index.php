@@ -310,13 +310,17 @@ function displayMainResults(rows) {
         if (r[h] == "cineca") {
           string = `<img src="CINECA_logo.png" style="width:3.5em;">`;
         }
-        else {
+        else if (r[h] == "1000geno") {
           string = `<img src="1000genomes.png" style="width:3.5em;">`;
         } 
+        else {
+          string = `<img src="beacon_logo.png" style="width:3em;">` + r[h];
+        }
         html += `<td>`;
         html += string;
         html += `</td>`;
       }
+
       else {
         if (string.length > 23) {
           string = string.substring(0, 20);

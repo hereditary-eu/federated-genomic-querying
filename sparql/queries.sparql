@@ -23,7 +23,7 @@ WHERE {
   }
 
   FILTER(
-    ?pos = "PARAM_REF_NAME"^^rdf:PlainLiteral &&
+    ?chrom = "PARAM_REF_NAME"^^rdf:PlainLiteral &&
     ?pos = "PARAM_POS"^^rdf:PlainLiteral &&
     ?ref = "PARAM_REF"^^rdf:PlainLiteral &&
     ?alt = "PARAM_ALT"^^rdf:PlainLiteral

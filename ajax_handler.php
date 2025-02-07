@@ -29,12 +29,12 @@ if (!$queryType) {
  **************************************************************/
 function executeSparqlQuery($endpoint, $sparql) {
   // minimal caching in session
-  if (!isset($_SESSION['query_cache'])) {
+  /*if (!isset($_SESSION['query_cache'])) {
     $_SESSION['query_cache'] = [];
   }
   if (isset($_SESSION['query_cache'][$sparql])) {
     return $_SESSION['query_cache'][$sparql];
-  }
+  }*/
 
   // cURL
   $ch = curl_init();
@@ -69,7 +69,7 @@ function executeSparqlQuery($endpoint, $sparql) {
     throw new Exception("Invalid JSON from GraphDB: $result");
   }
 
-  $_SESSION['query_cache'][$sparql] = $json;
+  //$_SESSION['query_cache'][$sparql] = $json;
   return $json;
 }
 
@@ -79,12 +79,8 @@ function executeSparqlQuery($endpoint, $sparql) {
  * to match the real aggregator's API.
  **************************************************************/
 function callBeaconNetwork($chrom, $pos, $ref, $alt) {
-    // We'll transform the aggregator's response into a shape
-    // similar to our local results. For instance, we might
-    // return an array of arrays or an array of objects with
-    // keys: dataset, chrom, pos, ref, alt
-    // Below is hypothetical:
-    $beaconResults = [];
+    $mh = curl_multi_init();
+    $curlHandles = [];
 
     // Example aggregator endpoint (PLACEHOLDER!)
     // Check official docs for the correct path/params.
@@ -102,56 +98,54 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
     "%5Bcogr-queens,rdconnect,aauh-retroseq,sahgp,scilifelab%5D","%5Bcogr-sinai,clinbioinfosspa,swefreq,cmh,ucsc%5D", 
     "%5Bcytognomix,variant-matcher,vicc,wgs%5D"];
 
-    foreach ($beacons as $beacon) {
-      $url = "https://beacon-network.org/api/responses?&allele=$alt&beacon=$beacon&chrom=$chrom&pos=$pos&ref=$ref";
-
-      // We will do a GET request
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $url);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-      // Set timeouts, etc., as needed
-      $result = curl_exec($ch);
-
-      if (curl_errno($ch)) {
-        $err = curl_error($ch);
-        curl_close($ch);
-        echo "Beacon Network cURL error: $err";
-        throw new Exception("Beacon Network cURL error: $err");
-      }
-      $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-      curl_close($ch);
-
-      if ($code != 200) {
-        echo "Beacon Network returned HTTP code $code, response: $result";
-        throw new Exception("Beacon Network returned HTTP code $code, response: $result");
-      }
-
-      // Example parse
-      $json = json_decode($result, true);
-      if (!$json) {
-        echo "Invalid JSON from Beacon aggregator: $result";
-        throw new Exception("Invalid JSON from Beacon aggregator: $result");
-      }
-
-  
-
-      // Suppose $json has a structure like: { data: [ { chromosome, position, reference, alternate } ] }
-      if (isset($json['data']) && is_array($json['data'])) {
-        foreach ($json['data'] as $item) {
-          $beaconResults[] = [
-            "dataset" => $beacon, // or item['dataset'] if provided
-            "chrom"   => $item['chromosome'] ?? '1',
-            "pos"     => $item['position'] ?? '',
-            "ref"     => $item['reference'] ?? '',
-            "alt"     => $item['alternate'] ?? ''
-          ];
-        }
-      }
+     // Create and add individual cURL handles
+     foreach ($beacons as $beacon) {
+        $url = "https://beacon-network.org/api/responses?allele=" . urlencode($alt)
+            . "&beacon=" . $beacon
+            . "&chrom=" . urlencode($chrom)
+            . "&pos=" . urlencode($pos)
+            . "&ref=GRCh37"
+            . "&referenceAllele=" . urlencode($ref);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_multi_add_handle($mh, $ch);
+        $curlHandles[] = $ch;
     }
     
+    // Execute the handles in parallel
+    $running = null;
+    do {
+        curl_multi_exec($mh, $running);
+        // Optional: you can add a small sleep here to reduce CPU usage
+        usleep(10000);
+    } while ($running > 0);
     
-
+    $beaconResults = [];
+    foreach ($curlHandles as $ch) {
+        $result = curl_multi_getcontent($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if ($code === 200) {
+          $json = json_decode($result, true);
+            foreach ($json as $beacon_res) {
+              if ($beacon_res['response'] == true) {
+                // Format the result to match your expected shape.
+                $beaconResults[] = [
+                    "dataset" => $beacon_res["fullBeaconResponse"]["meta"]["beaconId"] . " " . $beacon_res["fullBeaconResponse"]["meta"]["apiVersion"],
+                    "chrom"   => $chrom,
+                    "pos"     => $pos,
+                    "ref"     => $ref,
+                    "alt"     => $alt
+                ];
+              }
+            }    
+        }
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+    //print_r($beaconResults);
     return $beaconResults;
 }
 
@@ -180,7 +174,7 @@ WHERE {
   }
 
   FILTER(
-    ?pos = "$chrom"^^rdf:PlainLiteral &&
+    ?chrom = "$chrom"^^rdf:PlainLiteral &&
     ?pos = "$pos"^^rdf:PlainLiteral &&
     ?ref = "$ref"^^rdf:PlainLiteral &&
     ?alt = "$alt"^^rdf:PlainLiteral
@@ -347,7 +341,7 @@ try {
         $alt = $data['alt'] ?? "C";
 
         // 1) Run local SPARQL
-        /*$sparql = buildSequenceQuery($chrom, $pos, $ref, $alt);
+        $sparql = buildSequenceQuery($chrom, $pos, $ref, $alt);
         $localJson = executeSparqlQuery($graphdbEndpoint, $sparql);
         $localBindings = $localJson['results']['bindings'] ?? [];
         $localResults = [];
@@ -361,7 +355,7 @@ try {
           if(isset($b['alt']))     $row['alt']     = $b['alt']['value'];
           $localResults[] = $row;
         }
-        */
+        
         // [NEW] 2) ALSO call the Beacon Network aggregator
         try {
           $beaconResults = callBeaconNetwork($chrom, $pos, $ref, $alt); // returns array
@@ -417,7 +411,7 @@ try {
         break;
 
       case "4":
-        // VT
+        // Aminoacid change
         $infoValue = $data['infoValue'] ?? "INDEL";
         $sparql = buildVtQuery($infoValue);
         $jsonResp = executeSparqlQuery($graphdbEndpoint, $sparql);
@@ -443,24 +437,30 @@ try {
   } else if ($queryType === 'metadata') {
     // [No change here]
     $row = $data['rowData'] ?? [];
-    $pos = $row['pos'] ?? "";
-    $ref = $row['ref'] ?? "";
-    $alt = $row['alt'] ?? "";
+    if ($row['dataset'] == "cineca" || $row['dataset'] == "1000geno") { // add support for Beacon Network metadata...
+      $pos = $row['pos'] ?? "";
+      $ref = $row['ref'] ?? "";
+      $alt = $row['alt'] ?? "";
 
-    $sparql = buildMetadataQuery($pos, $ref, $alt);
-    $jsonResp = executeSparqlQuery($graphdbEndpoint, $sparql);
-    $bindings = $jsonResp['results']['bindings'] ?? [];
-    $results = [];
-    foreach($bindings as $b) {
-      $results[] = [
-        "dataset"   => $b['dataset']['value']   ?? '',
-        "infoKey"   => $b['infoKey']['value']   ?? '',
-        "infoValue" => $b['infoValue']['value'] ?? ''
-      ];
+      $sparql = buildMetadataQuery($pos, $ref, $alt);
+      $jsonResp = executeSparqlQuery($graphdbEndpoint, $sparql);
+      $bindings = $jsonResp['results']['bindings'] ?? [];
+      $results = [];
+      foreach($bindings as $b) {
+        $results[] = [
+          "dataset"   => $b['dataset']['value']   ?? '',
+          "infoKey"   => $b['infoKey']['value']   ?? '',
+          "infoValue" => $b['infoValue']['value'] ?? ''
+        ];
+      }
+
+      echo json_encode(["results" => $results]);
+      exit;
     }
-
-    echo json_encode(["results" => $results]);
-    exit;
+    else {
+      echo json_encode(["results" => []]);
+      exit;
+    }
 
   } else {
     echo json_encode(["error" => "Unknown queryType: $queryType"]);
