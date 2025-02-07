@@ -73,15 +73,19 @@ session_start();
       <div id="params-sequence" class="query-params" style="display:none;">
         <h5>Sequence Query Parameters</h5>
         <div class="form-row">
-          <div class="form-group col-md-4">
+          <div class="form-group col-md-3">
+            <label>Chromosome</label>
+            <input type="text" class="form-control" id="chromSeq" value="1">
+          </div>
+          <div class="form-group col-md-3">
             <label>Position</label>
             <input type="text" class="form-control" id="posSeq" value="719853">
           </div>
-          <div class="form-group col-md-4">
+          <div class="form-group col-md-3">
             <label>Reference Bases</label>
             <input type="text" class="form-control" id="refSeq" value="CAG">
           </div>
-          <div class="form-group col-md-4">
+          <div class="form-group col-md-3">
             <label>Alternate Bases</label>
             <input type="text" class="form-control" id="altSeq" value="C">
           </div>
@@ -218,6 +222,7 @@ document.getElementById('runQueryBtn').addEventListener('click', async () => {
 
   if (beaconType === '1') {
     // Sequence
+    payload.chrom = document.getElementById('chromSeq').value;
     payload.pos = document.getElementById('posSeq').value;
     payload.ref = document.getElementById('refSeq').value;
     payload.alt = document.getElementById('altSeq').value;
