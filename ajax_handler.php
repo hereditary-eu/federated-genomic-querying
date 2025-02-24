@@ -141,6 +141,12 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
                       "val" => $value
                     ];
                   }
+                  foreach ($beacon_res["info"] as $key => $value) {
+                    $metadata[] = [
+                      "key" => $key,
+                      "val" => $value
+                    ];
+                  }
                 
                 $beaconResults[] = [
                     "dataset" => "<b>" . $beacon_res["beacon"]["name"] . "</b> - " . $beacon_res["beacon"]["organization"],

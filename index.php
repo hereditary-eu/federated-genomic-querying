@@ -382,7 +382,9 @@ async function runMetadataQueries(mainRows) {
       // Show the main row data for reference
       const rowKeys = Object.keys(row);
       rowKeys.forEach(k => {
-        html += `<br/>${escapeHtml(k)}: <em>${escapeHtml(row[k])}</em>`;
+        if (k != "metadata") {
+          html += `<br/>${escapeHtml(k)}: <em>${escapeHtml(row[k])}</em>`;
+        }
       });
       html += `<br/><br/>`;
 
