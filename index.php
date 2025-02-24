@@ -358,7 +358,7 @@ function displayMainResults(rows) {
           } else {
             // No base64 found => fallback to your existing default
             string = `
-              <img src="beacon_logo.png" style="width:3em;" alt="Beacon Logo"/>
+              <img src="beacon_logo.png" style="width:2em;" alt="Beacon Logo"/>
               ${r[h]}
             `;
           }
@@ -424,7 +424,23 @@ async function runMetadataQueries(mainRows) {
       const rowKeys = Object.keys(row);
       rowKeys.forEach(k => {
         if (k !== "metadata") {
-          html += `<br/>${escapeHtml(k)}: <em>${escapeHtml(row[k])}</em>`;
+          if (k == "dataset") {
+            const splittedText = row[k].split("-");
+            let beaconName = splittedText[splittedText.length - 1].trim();
+            // Check if we have a base64 logo for this ID
+            const base64logo = orgLogos[beaconName];  // orgLogos is our global dictionary
+
+            if (base64logo) {
+              // Show both the default beacon logo + the org’s base64 logo
+              html += `
+              <img src="data:image/png;base64,${base64logo}" style="width:3em; margin-right:0.5em;" alt="${row[k]} Logo" />
+              `;
+            }
+            html += `<br/>${escapeHtml(k)}: <em>${row[k]}</em>`;
+          }
+          else {
+            html += `<br/>${escapeHtml(k)}: <em>${row[k]}</em>`;
+          }
         }
       });
       html += `<br/><br/>`;
