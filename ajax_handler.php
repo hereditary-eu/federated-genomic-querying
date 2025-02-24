@@ -103,7 +103,7 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
         $url = "https://beacon-network.org/api/responses?allele=" . urlencode($alt)
             . "&beacon=" . $beacon
             . "&chrom=" . urlencode($chrom)
-            . "&pos=" . urlencode($pos)
+            . "&pos=" . urlencode($pos-1)
             . "&ref=GRCh37"
             . "&referenceAllele=" . urlencode($ref);
         $ch = curl_init();
@@ -132,7 +132,7 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
               if ($beacon_res['response'] == true) {
                 // Format the result to match your expected shape.
                 $beaconResults[] = [
-                    "dataset" => $beacon_res["fullBeaconResponse"]["meta"]["beaconId"] . " " . $beacon_res["fullBeaconResponse"]["meta"]["apiVersion"],
+                    "dataset" => "<b>" . $beacon_res["beacon"]["name"] . "</b> - " . $beacon_res["beacon"]["organization"],
                     "chrom"   => $chrom,
                     "pos"     => $pos,
                     "ref"     => $ref,
