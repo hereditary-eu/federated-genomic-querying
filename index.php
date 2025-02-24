@@ -298,7 +298,9 @@ function displayMainResults(rows) {
   html += `<table class="table table-bordered table-sm"><thead><tr>`;
   const headers = Object.keys(rows[0]);
   headers.forEach(h => {
-    html += `<th>${escapeHtml(h)}</th>`;
+    if (h != "metadata") {
+      html += `<th>${escapeHtml(h)}</th>`;
+    }
   });
   html += `</tr></thead><tbody>`;
 
@@ -321,7 +323,7 @@ function displayMainResults(rows) {
         html += `</td>`;
       }
 
-      else {
+      else if (h != "metadata") {
         if (string.length > 23) {
           string = string.substring(0, 20);
           string = string.concat("...");
@@ -340,6 +342,7 @@ function displayMainResults(rows) {
 async function runMetadataQueries(mainRows) {
   const mdDiv = document.getElementById('metadataResults');
   mdDiv.innerHTML = '<p><em>Loading metadata...</em></p>';
+  
 
   try {
     // We'll do a Promise.all for each row
@@ -363,6 +366,9 @@ async function runMetadataQueries(mainRows) {
       const rowIndex = item.index;
       const mdData = item.json; 
       const row = mainRows[rowIndex];
+      console.log(row);
+
+      
       
       if(mdData.error) {
         html += `<div class="alert alert-warning">Metadata error: ${escapeHtml(mdData.error)}</div>`;
@@ -381,7 +387,26 @@ async function runMetadataQueries(mainRows) {
       html += `<br/><br/>`;
 
       if(metaRows.length === 0) {
-        html += `<em>No metadata found</em>`;
+        
+        if (row.metadata !== 'undefined' && row.metadata != null && row.metadata.length > 0) {
+          html += `
+          <table class="table table-sm">
+            <thead>
+              <tr><th>infoKey</th><th>infoValue</th></tr>
+            </thead>
+            <tbody>
+        `;
+          row.metadata.forEach(mr => {
+            html += `<tr>
+            <td>${escapeHtml(mr.key)}</td>
+            <td>${escapeHtml(mr.val)}</td>
+          </tr>`;  
+          });
+          html += `</tbody></table>`;
+        }
+        else {
+          html += `<em>No metadata found</em>`;
+        }
       } else {
         html += `
           <table class="table table-sm">

@@ -109,7 +109,7 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 50);
         curl_multi_add_handle($mh, $ch);
         $curlHandles[] = $ch;
     }
@@ -119,7 +119,7 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
     do {
         curl_multi_exec($mh, $running);
         // Optional: you can add a small sleep here to reduce CPU usage
-        usleep(10000);
+        usleep(20000);
     } while ($running > 0);
     
     $beaconResults = [];
@@ -131,12 +131,24 @@ function callBeaconNetwork($chrom, $pos, $ref, $alt) {
             foreach ($json as $beacon_res) {
               if ($beacon_res['response'] == true) {
                 // Format the result to match your expected shape.
+                
+                $metadata = [];
+                //print_r($beacon_res["fullBeaconResponse"]["datasetAlleleResponses"][0]["info"]);
+                //if (array_key_exists("info", $beacon_res["fullBeaconResponse"]["datasetAlleleResponses"])) {
+                  foreach ($beacon_res["fullBeaconResponse"]["datasetAlleleResponses"][0]["info"] as $key => $value) {
+                    $metadata[] = [
+                      "key" => $key,
+                      "val" => $value
+                    ];
+                  }
+                
                 $beaconResults[] = [
                     "dataset" => "<b>" . $beacon_res["beacon"]["name"] . "</b> - " . $beacon_res["beacon"]["organization"],
                     "chrom"   => $chrom,
                     "pos"     => $pos,
                     "ref"     => $ref,
-                    "alt"     => $alt
+                    "alt"     => $alt,
+                    "metadata"    => $metadata
                 ];
               }
             }    
