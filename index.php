@@ -35,10 +35,10 @@ session_start();
     }
   </style>
   <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="shortcut icon" href="/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-<link rel="manifest" href="/site.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
 </head>
 <body class="bg-light">
 
@@ -79,7 +79,7 @@ session_start();
           </div>
           <div class="form-group col-md-3">
             <label>Position</label>
-            <input type="text" class="form-control" id="posSeq" value="719853">
+            <input type="text" class="form-control" id="posSeq" value="719854">
           </div>
           <div class="form-group col-md-3">
             <label>Reference Bases</label>
@@ -165,10 +165,35 @@ session_start();
 </div>
 
 <script>
+/* 
+  1) Global dictionary to hold base64 logos keyed by organization "id". 
+     We'll load it below in loadOrganizations().
+*/
+let orgLogos = {};
+
+// 2) Load organizations on page load
+async function loadOrganizations() {
+  try {
+    const response = await fetch('https://beacon-network.org/api/organizations');
+    if (!response.ok) throw new Error('HTTP Error ' + response.status);
+
+    const data = await response.json();
+    data.forEach(org => {
+      // org.id -> base64
+      orgLogos[org.name] = org.logo;
+    });
+  } catch(err) {
+    console.error('Failed to load organizations:', err);
+  }
+}
+
+// We'll trigger the fetch for logos as soon as DOM is ready
+window.addEventListener('DOMContentLoaded', loadOrganizations);
+
+
 // Initially hide spinner
 document.getElementById('spinner-overlay').style.display = 'none';
 
-// Show/hide parameter sections based on queryType
 function updateParamVisibility() {
   const val = document.getElementById('queryType').value;
   document.getElementById('params-sequence').style.display = (val === '1') ? 'block' : 'none';
@@ -176,7 +201,6 @@ function updateParamVisibility() {
   document.getElementById('params-bracket').style.display  = (val === '3') ? 'block' : 'none';
   document.getElementById('params-vt').style.display       = (val === '4') ? 'block' : 'none';
 }
-
 document.getElementById('queryType').addEventListener('change', updateParamVisibility);
 updateParamVisibility(); // on page load
 
@@ -290,43 +314,62 @@ document.getElementById('runQueryBtn').addEventListener('click', async () => {
 
 // Render main results in a table
 function displayMainResults(rows) {
+
   const container = document.getElementById('mainResults');
   let html = `<h5>Main Query Results</h5>`;
-
 
   // Build table
   html += `<table class="table table-bordered table-sm"><thead><tr>`;
   const headers = Object.keys(rows[0]);
   headers.forEach(h => {
-    if (h != "metadata") {
+    if (h !== "metadata") {
       html += `<th>${escapeHtml(h)}</th>`;
     }
   });
   html += `</tr></thead><tbody>`;
 
-  rows.forEach((r, i) => {
+  rows.forEach((r) => {
     html += `<tr>`;
     headers.forEach(h => {
-      var string = escapeHtml(r[h]);
-      if (h == "dataset" || h == 0) {
-        if (r[h] == "cineca") {
+      let string = escapeHtml(r[h]);
+      
+      // We specifically want to inject logos if h == "dataset" (or h == 0).
+      if (h === "dataset" || h === 0) {
+        // Check for special cases
+        if (r[h] === "cineca") {
           string = `<img src="CINECA_logo.png" style="width:3.5em;">`;
         }
-        else if (r[h] == "1000geno") {
+        else if (r[h] === "1000geno") {
           string = `<img src="1000genomes.png" style="width:3.5em;">`;
-        } 
-        else {
-          string = `<img src="beacon_logo.png" style="width:3em;">` + r[h];
         }
-        html += `<td>`;
-        html += string;
-        html += `</td>`;
-      }
+        else {
+          const splittedText = r[h].split("-");
+          let beaconName = splittedText[splittedText.length - 1].trim();
+          // Check if we have a base64 logo for this ID
+          const base64logo = orgLogos[beaconName];  // orgLogos is our global dictionary
 
-      else if (h != "metadata") {
+          if (base64logo) {
+            // Show both the default beacon logo + the org’s base64 logo
+            string = `
+            <img src="data:image/png;base64,${base64logo}" style="width:3em; margin-right:0.5em;" alt="${escapeHtml(r[h])} Logo" />
+            <img src="beacon_logo.png" style="width:2em; margin-right:0.5em;" alt="Beacon Logo"/>
+              ${r[h]}
+            `;
+          } else {
+            // No base64 found => fallback to your existing default
+            string = `
+              <img src="beacon_logo.png" style="width:3em;" alt="Beacon Logo"/>
+              ${r[h]}
+            `;
+          }
+        }
+
+        html += `<td>${string}</td>`;
+
+      } else if (h !== "metadata") {
+        // Truncate if too long
         if (string.length > 23) {
-          string = string.substring(0, 20);
-          string = string.concat("...");
+          string = string.substring(0, 20) + "...";
         }
         html += `<td alt="${escapeHtml(r[h])}">${string}</td>`;
       }
@@ -343,20 +386,21 @@ async function runMetadataQueries(mainRows) {
   const mdDiv = document.getElementById('metadataResults');
   mdDiv.innerHTML = '<p><em>Loading metadata...</em></p>';
   
-
   try {
     // We'll do a Promise.all for each row
-    const promises = mainRows.map((row, index) => fetch('ajax_handler.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        queryType: 'metadata',
-        rowData: row
+    const promises = mainRows.map((row, index) => 
+      fetch('ajax_handler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          queryType: 'metadata',
+          rowData: row
+        })
+      }).then(resp => {
+        if(!resp.ok) throw new Error('HTTP error ' + resp.status);
+        return resp.json().then(j => ({ index, json: j }));
       })
-    }).then(resp => {
-      if(!resp.ok) throw new Error('HTTP error ' + resp.status);
-      return resp.json().then(j => ({ index, json: j }));
-    }));
+    );
 
     const resultsArray = await Promise.all(promises);
     // resultsArray = [ { index: 0, json: {...} }, { index: 1, json: {...} }, ... ]
@@ -366,10 +410,7 @@ async function runMetadataQueries(mainRows) {
       const rowIndex = item.index;
       const mdData = item.json; 
       const row = mainRows[rowIndex];
-      console.log(row);
 
-      
-      
       if(mdData.error) {
         html += `<div class="alert alert-warning">Metadata error: ${escapeHtml(mdData.error)}</div>`;
         return;
@@ -382,27 +423,27 @@ async function runMetadataQueries(mainRows) {
       // Show the main row data for reference
       const rowKeys = Object.keys(row);
       rowKeys.forEach(k => {
-        if (k != "metadata") {
+        if (k !== "metadata") {
           html += `<br/>${escapeHtml(k)}: <em>${escapeHtml(row[k])}</em>`;
         }
       });
       html += `<br/><br/>`;
 
       if(metaRows.length === 0) {
-        
-        if (row.metadata !== 'undefined' && row.metadata != null && row.metadata.length > 0) {
+        // Possibly display fallback from row.metadata
+        if (typeof row.metadata !== 'undefined' && row.metadata && row.metadata.length > 0) {
           html += `
-          <table class="table table-sm">
-            <thead>
-              <tr><th>infoKey</th><th>infoValue</th></tr>
-            </thead>
-            <tbody>
-        `;
+            <table class="table table-sm">
+              <thead>
+                <tr><th>infoKey</th><th>infoValue</th></tr>
+              </thead>
+              <tbody>
+          `;
           row.metadata.forEach(mr => {
             html += `<tr>
-            <td>${escapeHtml(mr.key)}</td>
-            <td>${escapeHtml(mr.val)}</td>
-          </tr>`;  
+              <td>${escapeHtml(mr.key)}</td>
+              <td>${escapeHtml(mr.val)}</td>
+            </tr>`;  
           });
           html += `</tbody></table>`;
         }
@@ -447,4 +488,3 @@ function escapeHtml(str) {
 </script>
 </body>
 </html>
-
