@@ -339,11 +339,11 @@ function displayMainResults(rows) {
         // Check for special cases
         if (r[h] === "cineca") {
           html += `<td><img src="11681505.png" style="width:2em; margin-right:0.5em;" alt="Onto Logo"/></td>`;
-          string = `<img src="CINECA_logo.png" style="width:3.5em;">`;
+          string = `<img src="CINECA_logo.png" style="width:3.5em;"><b>CINECA African Cohort Dataset</b>`;
         }
         else if (r[h] === "1000geno") {
           html += `<td><img src="11681505.png" style="width:2em; margin-right:0.5em;" alt="Onto Logo"/></td>`;
-          string = `<img src="1000genomes.png" style="width:3.5em;">`;
+          string = `<img src="1000genomes.png" style="width:3.5em;"><b>1000 Genomes Project</b>`;
         }
         else {
           const splittedText = r[h].split("-");
@@ -361,9 +361,8 @@ function displayMainResults(rows) {
             // No base64 found => fallback to your existing default
             html +=  `
             <td><img src="beacon_logo.png" style="width:2em;" alt="Beacon Logo"/></td>
-            ${r[h]}
             `;
-            string = ` `;
+            string = `${r[h]}`;
           }
         }
 
