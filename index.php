@@ -321,6 +321,7 @@ function displayMainResults(rows) {
   // Build table
   html += `<table class="table table-bordered table-sm"><thead><tr>`;
   const headers = Object.keys(rows[0]);
+  html += `<th>Source type</th>`;
   headers.forEach(h => {
     if (h !== "metadata") {
       html += `<th>${escapeHtml(h)}</th>`;
@@ -337,9 +338,11 @@ function displayMainResults(rows) {
       if (h === "dataset" || h === 0) {
         // Check for special cases
         if (r[h] === "cineca") {
+          html += `<td><img src="11681505.png" style="width:2em; margin-right:0.5em;" alt="Onto Logo"/></td>`;
           string = `<img src="CINECA_logo.png" style="width:3.5em;">`;
         }
         else if (r[h] === "1000geno") {
+          html += `<td><img src="11681505.png" style="width:2em; margin-right:0.5em;" alt="Onto Logo"/></td>`;
           string = `<img src="1000genomes.png" style="width:3.5em;">`;
         }
         else {
@@ -350,17 +353,17 @@ function displayMainResults(rows) {
 
           if (base64logo) {
             // Show both the default beacon logo + the org’s base64 logo
-            string = `
-            <img src="data:image/png;base64,${base64logo}" style="width:3em; margin-right:0.5em;" alt="${escapeHtml(r[h])} Logo" />
-            <img src="beacon_logo.png" style="width:2em; margin-right:0.5em;" alt="Beacon Logo"/>
+            html += `<td><img src="beacon_logo.png" style="width:2em; margin-right:0.5em;" alt="Beacon Logo"/></td>`;
+            string = `<img src="data:image/png;base64,${base64logo}" style="width:3em; margin-right:0.5em;" alt="${escapeHtml(r[h])} Logo" />
               ${r[h]}
             `;
           } else {
             // No base64 found => fallback to your existing default
-            string = `
-              <img src="beacon_logo.png" style="width:2em;" alt="Beacon Logo"/>
-              ${r[h]}
+            html +=  `
+            <td><img src="beacon_logo.png" style="width:2em;" alt="Beacon Logo"/></td>
+            ${r[h]}
             `;
+            string = ` `;
           }
         }
 
