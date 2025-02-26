@@ -339,11 +339,11 @@ function displayMainResults(rows) {
         // Check for special cases
         if (r[h] === "cineca") {
           html += `<td><img src="11681505.png" style="width:2em; margin-right:0.5em;" alt="Onto Logo"/></td>`;
-          string = `<img src="CINECA_logo.png" style="width:3.5em;"><b>CINECA African Cohort Dataset</b>`;
+          string = `<img src="CINECA_logo.png" style="width:3.5em;"><b>CINECA African Cohort Dataset</b><span class="badge badge-success" style="float: right;">Found</span>`;
         }
         else if (r[h] === "1000geno") {
           html += `<td><img src="11681505.png" style="width:2em; margin-right:0.5em;" alt="Onto Logo"/></td>`;
-          string = `<img src="1000genomes.png" style="width:3.5em;"><b>1000 Genomes Project</b>`;
+          string = `<img src="1000genomes.png" style="width:3.5em;"><b>1000 Genomes Project</b> <span class="badge badge-success" style="float: right;">Found</span>`;
         }
         else {
           const splittedText = r[h].split("-");
@@ -354,7 +354,7 @@ function displayMainResults(rows) {
           if (base64logo) {
             // Show both the default beacon logo + the org’s base64 logo
             html += `<td><img src="beacon_logo.png" style="width:2em; margin-right:0.5em;" alt="Beacon Logo"/></td>`;
-            string = `<img src="data:image/png;base64,${base64logo}" style="width:3em; margin-right:0.5em;" alt="${escapeHtml(r[h])} Logo" />
+            string = `<img src="data:image/png;base64,${base64logo}" style="width:3em; margin-right:0.5em;" alt="${escapeHtml(r[h])} Logo" /> <span class="badge badge-success" style="float: right;">Found</span>
               ${r[h]}
             `;
           } else {
@@ -362,7 +362,7 @@ function displayMainResults(rows) {
             html +=  `
             <td><img src="beacon_logo.png" style="width:2em;" alt="Beacon Logo"/></td>
             `;
-            string = `${r[h]}`;
+            string = `${r[h]} <span class="badge badge-success" style="float: right;">Found</span>`;
           }
         }
 
