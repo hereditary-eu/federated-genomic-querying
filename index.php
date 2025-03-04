@@ -33,12 +33,20 @@ session_start();
       align-items: center;
       justify-content: center;
     }
+    .footer {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+    }
   </style>
   <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
+  <link rel="stylesheet" href=
+  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 </head>
 <body class="bg-light">
 
@@ -163,6 +171,26 @@ session_start();
 <div id="spinner-overlay" class="">
   <div class="d-none"></div> <!-- minimal safeguard -->
 </div>
+
+<!-- BEGIN: Footer -->
+<footer class="footer mt-4 py-3 bg-white border-top">
+  <div class="container text-center" style="display:flex;">
+    <!-- Change this to your actual footer logo -->
+    <img src="iiia-logo.png" alt="Footer Logo" style="max-width:60px; height:auto;">&nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="image002.jpg" alt="Footer Logo" style="max-width:90px; height:auto;">
+    <p class="my-2"><a href="#" class="fa fa-globe"></a> <a href="https://iiia.dei.unipd.it">Intelligent Interactive Information Access Hub (IIIA)</a> - Dept. of Information Engineering - University of Padua</p>
+    <p class="my-2">
+      <!-- Email link -->
+      <a href="#" class="fa fa-envelope"></a> Author: <a href="mailto:mirco.cazzaro@phd.unipd.it">mirco.cazzaro@phd.unipd.it</a>
+      | 
+      <a href="#" class="fa fa-envelope"></a> Advisor: <a href="gianmaria.silvello@unipd.it">gianmaria.silvello@unipd.it</a>
+      | 
+      <!-- LinkedIn link -->
+      <a href="#" class="fa fa-linkedin"></a> <a href="https://www.linkedin.com/in/mirco-cazzaro-360b20235/" target="_blank">Mirco Cazzaro</a>
+    </p>
+  </div>
+</footer>
+<!-- END: Footer -->
 
 <script>
 /* 
