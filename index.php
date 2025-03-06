@@ -58,7 +58,7 @@ session_start();
     <img src="3.png" alt="Logo3">
   </div>
 
-  <div class="card">
+  <div class="card" style="margin-bottom:10em;">
     <div class="card-header">
       <h3>Beacon SPARQL Queries + Metadata</h3>
     </div>
@@ -448,7 +448,7 @@ async function runMetadataQueries(mainRows) {
 
       const metaRows = mdData.results || [];
 
-      html += `<div class="card mb-2"><div class="card-body">`;
+      html += `<div class="card"><div class="card-body">`;
       html += `<strong>Row #${rowIndex+1}</strong> => `;
       // Show the main row data for reference
       const rowKeys = Object.keys(row);
