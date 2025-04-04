@@ -1,4 +1,4 @@
-# Beacon SPARQL Web App
+# Beacon-Like SPARQL Web App on HERO-Genomics
 
 This project demonstrates a simple **PHP + Bootstrap** web application for issuing **Beacon-style SPARQL queries** against a **GraphDB** repository. It supports four query types:
 
